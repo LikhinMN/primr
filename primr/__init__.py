@@ -1,5 +1,17 @@
+import subprocess
+import sys
+
+
+def ensure_dependencies():
+    try:
+        import ollama
+    except ImportError:
+        subprocess.run([sys.executable, "-m", "pip", "install", "ollama"], check=True)
+        import ollama
+
+
 def register():
-    pass
+    ensure_dependencies()
 
 
 def unregister():
