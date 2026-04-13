@@ -1,5 +1,7 @@
+import bpy
 import subprocess
 import sys
+from . import panel
 
 
 def ensure_dependencies():
@@ -12,10 +14,16 @@ def ensure_dependencies():
 
 def register():
     ensure_dependencies()
+    bpy.types.Scene.primr_prompt = bpy.props.StringProperty(
+        name="Prompt",
+        description="Your instruction to Primr",
+        default=""
+    )
+    bpy.utils.register_class(panel.PRIMR_PT_main)
 
 
 def unregister():
-    pass
+    del bpy.types.Scene.primr_prompt
 
 
 if __name__ == "__main__":
