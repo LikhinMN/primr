@@ -20,6 +20,10 @@ def register():
         description="Your instruction to Primr",
         default=""
     )
+    bpy.types.Scene.primr_result = bpy.props.StringProperty(
+        name="Result",
+        default=""
+    )
     bpy.utils.register_class(panel.PRIMR_PT_main)
     bpy.utils.register_class(operators.PRIMR_OT_submit)
 
@@ -27,6 +31,7 @@ def register():
 def unregister():
     del bpy.types.Scene.primr_prompt
     bpy.utils.unregister_class(operators.PRIMR_OT_submit)
+    del bpy.types.Scene.primr_result
 
 
 if __name__ == "__main__":

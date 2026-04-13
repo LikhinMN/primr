@@ -14,3 +14,5 @@ class PRIMR_PT_main(bpy.types.Panel):
         layout.label(text="What do you want to build?")
         layout.prop(scene, "primr_prompt", text="")
         layout.operator("primr.submit", text="Generate")
+        layout.separator()
+        layout.label(text=scene.primr_result)

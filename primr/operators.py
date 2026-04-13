@@ -1,4 +1,5 @@
 import bpy
+from . import executor, agent
 
 
 class PRIMR_OT_submit(bpy.types.Operator):
@@ -8,5 +9,9 @@ class PRIMR_OT_submit(bpy.types.Operator):
 
     def execute(self, context):
         prompt = context.scene.primr_prompt
-        print(f"Primr received: {prompt}")
+        response = agent.ask(prompt)
+        code = executor.extract_code(response)
+        result = executor.execute_code(code)
+        context.scene.primr_result = result
+        print(f"code: {code}\nresult: {result}")
         return {"FINISHED"}
