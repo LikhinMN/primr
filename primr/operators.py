@@ -9,7 +9,7 @@ class PRIMR_OT_submit(bpy.types.Operator):
 
     def execute(self, context):
         prompt = context.scene.primr_prompt
-        response = agent.ask(prompt)
+        response = agent.ask(prompt, context)
         code = executor.extract_code(response)
         result = executor.execute_code(code)
         context.scene.primr_result = result
