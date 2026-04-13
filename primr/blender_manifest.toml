@@ -1,0 +1,9 @@
+schema_version = "1.0.0"
+id = "primr"
+name = "Primr"
+version = "0.1.0"
+tagline = "AI-powered addon — prompt your 3D scene"
+maintainer = "Likhin M N"
+type = "add-on"
+blender_version_min = "5.1.0"
+license = ["SPDX:GPL-3.0-or-later"]
