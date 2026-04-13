@@ -8,11 +8,13 @@ Do not explain. Do not add markdown. Only output valid Python code."""
 conversation_history = [{"role": "system", "content": SYSTEM_PROMPT}]
 
 
-def ask(prompt: str) -> str:
-    conversation_history.append({"role": "user", "content": prompt})
+def ask(prompt: str, context) -> str:
+    scene_info = context.get_scene_context()
+    enriched_prompt = f"Current scene:\n{scene_info}\n\nUser instruction: {prompt}"
+    conversation_history.append({"role": "user", "content": enriched_prompt})
     response = ollama.chat(model="gemma4:e4b", messages=[
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": prompt}
+        {"role": "user", "content": enriched_prompt}
     ])
     print(f"Primr response: {response['message']['content']}")
     return response['message']['content']
