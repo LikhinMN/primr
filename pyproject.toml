@@ -1,0 +1,9 @@
+[project]
+name = "primr"
+version = "0.1.0"
+description = "AI-powered Blender addon — prompt your 3D scene"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+[project.urls]
+Homepage = "https://github.com/LikhinMN/primr"
