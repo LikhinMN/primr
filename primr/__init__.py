@@ -3,6 +3,7 @@ import subprocess
 import sys
 from . import panel
 from . import operators
+from . import agent
 
 
 def ensure_dependencies():
@@ -26,12 +27,15 @@ def register():
     )
     bpy.utils.register_class(panel.PRIMR_PT_main)
     bpy.utils.register_class(operators.PRIMR_OT_submit)
+    bpy.utils.register_class(operators.PRIMR_OT_clear)
 
 
 def unregister():
     del bpy.types.Scene.primr_prompt
     bpy.utils.unregister_class(operators.PRIMR_OT_submit)
     del bpy.types.Scene.primr_result
+    bpy.utils.unregister_class(operators.PRIMR_OT_clear)
+    agent.reset_history()
 
 
 if __name__ == "__main__":

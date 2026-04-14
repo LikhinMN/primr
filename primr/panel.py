@@ -16,3 +16,5 @@ class PRIMR_PT_main(bpy.types.Panel):
         layout.operator("primr.submit", text="Generate")
         layout.separator()
         layout.label(text=scene.primr_result)
+        layout.separator()
+        layout.operator("primr.clear", text="Clear History")
