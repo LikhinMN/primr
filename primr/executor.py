@@ -11,6 +11,7 @@ def extract_code(response: str) -> str:
 
 def execute_code(code: str) -> str:
     try:
+        bpy.ops.ed.undo_push(message="Primr: " + code[:40])
         exec(code, {"bpy": bpy})
         return "Code executed successfully."
     except Exception as e:
