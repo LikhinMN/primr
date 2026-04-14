@@ -10,7 +10,7 @@ conversation_history = [{"role": "system", "content": SYSTEM_PROMPT}]
 prompt_history = []
 
 
-def ask(prompt: str) -> str:
+def ask(prompt: str, model: str = "gemma3:4b", url: str = "http://localhost:11434") -> str:
     global conversation_history
     global prompt_history
     if len(prompt_history) > 5:

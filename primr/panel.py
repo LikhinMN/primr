@@ -11,6 +11,9 @@ class PRIMR_PT_main(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
+        layout.prop(scene, "primr_ollama_url", text="Ollama URL")
+        layout.prop(scene, "primr_model", text="Model")
+        layout.separator()
         layout.label(text="What do you want to build?")
         layout.prop(scene, "primr_prompt", text="")
         layout.operator("primr.submit", text="Generate")
