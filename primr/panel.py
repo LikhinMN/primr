@@ -15,6 +15,9 @@ class PRIMR_PT_main(bpy.types.Panel):
         layout.prop(scene, "primr_prompt", text="")
         layout.operator("primr.submit", text="Generate")
         layout.separator()
-        layout.label(text=scene.primr_result)
+        layout.label(text="History:")
+        box = layout.box()
+        for entry in scene.primr_history.split("\n\n"):
+            box.label(text=entry)
         layout.separator()
         layout.operator("primr.clear", text="Clear History")

@@ -25,6 +25,10 @@ def register():
         name="Result",
         default=""
     )
+    bpy.types.Scene.primr_history = bpy.props.StringProperty(
+        name="History",
+        default=""
+    )
     bpy.utils.register_class(panel.PRIMR_PT_main)
     bpy.utils.register_class(operators.PRIMR_OT_submit)
     bpy.utils.register_class(operators.PRIMR_OT_clear)
@@ -36,6 +40,7 @@ def unregister():
     del bpy.types.Scene.primr_result
     bpy.utils.unregister_class(operators.PRIMR_OT_clear)
     agent.reset_history()
+    del bpy.types.Scene.primr_history
 
 
 if __name__ == "__main__":

@@ -12,6 +12,8 @@ class PRIMR_OT_submit(bpy.types.Operator):
         response = agent.ask(prompt)
         code = executor.extract_code(response)
         result = executor.execute_code(code)
+        agent.add_to_prompt(prompt, result)
+        context.scene.primr_history = "\n\n".join(agent.prompt_history)
         context.scene.primr_result = result
         print(f"code: {code}\nresult: {result}")
         return {"FINISHED"}
