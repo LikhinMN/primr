@@ -3,6 +3,44 @@ import bpy
 from . import state
 
 
+def wrap_text(text: str, width: int = 60) -> list[str]:
+    if not text:
+        return [""]
+    return [text[i : i + width] for i in range(0, len(text), width)]
+
+
+def draw_message(layout, msg):
+    box = layout.box()
+    role_row = box.row()
+
+    if msg.role == "user":
+        role_row.alignment = "RIGHT"
+        role_row.label(text="You", icon="USER")
+        for line in wrap_text(msg.content, 60):
+            line_row = box.row()
+            line_row.alignment = "RIGHT"
+            line_row.label(text=line)
+        return
+
+    role_row.alignment = "LEFT"
+    role_row.label(text="Primr", icon="SHADERFX")
+
+    if msg.is_code:
+        row = box.row()
+        op = row.operator(
+            "primr.toggle_code",
+            text="Hide code ▴" if msg.code_expanded else "Show code ▾",
+            emboss=False,
+        )
+        op.msg_index = state.get_messages().index(msg)
+        if msg.code_expanded:
+            for line in wrap_text(msg.content, 55):
+                box.label(text=line)
+    else:
+        for line in wrap_text(msg.content, 55):
+            box.label(text=line)
+
+
 class PRIMR_PT_main(bpy.types.Panel):
     bl_label = "Primr"
     bl_idname = "PRIMR_PT_main"
@@ -10,69 +48,43 @@ class PRIMR_PT_main(bpy.types.Panel):
     bl_region_type = "UI"
     bl_category = "Primr"
 
-    def _draw_wrapped_text(self, layout, text, width=52):
-        if not text:
-            return
-        for raw_line in text.splitlines() or [text]:
-            line = raw_line.strip()
-            if not line:
-                continue
-            while len(line) > width:
-                split_at = line.rfind(" ", 0, width)
-                if split_at <= 0:
-                    split_at = width
-                layout.label(text=line[:split_at])
-                line = line[split_at:].lstrip()
-            layout.label(text=line)
-
-    def _draw_message(self, layout, message):
-        sender = "You" if message.role == "user" else "Primr"
-        icon = "USER" if message.role == "user" else "SCRIPT"
-
-        row = layout.row()
-        bubble = row.box()
-        bubble.label(text=sender, icon=icon)
-
-        if message.is_code:
-            meta = bubble.row()
-            meta.enabled = False
-            meta.label(text="executed code")
-
-        self._draw_wrapped_text(bubble, message.content)
-
     def draw(self, context):
         layout = self.layout
         scene = context.scene
 
-        header = layout.box()
-        header_row = header.row(align=True)
-        header_row.label(text="Primr", icon="DOT")
-        header_row.prop(scene, "primr_model", text="")
+        header = layout.row(align=True)
+        header.label(text="Primr Chat", icon="SHADERFX")
 
-        settings = header.column(align=True)
-        settings.prop(scene, "primr_ollama_url", text="Ollama URL")
+        box = layout.box()
+        row = box.row()
+        row.prop(
+            scene,
+            "primr_show_settings",
+            icon="TRIA_DOWN" if scene.primr_show_settings else "TRIA_RIGHT",
+            text="Settings",
+            emboss=False,
+        )
+        if scene.primr_show_settings:
+            box.prop(scene, "primr_model", text="Model")
+            box.prop(scene, "primr_ollama_url", text="Ollama URL")
 
         layout.separator()
-        layout.label(text="Chat")
-        chat = layout.box()
 
         messages = state.get_messages()
-        if not messages:
-            intro = chat.box()
-            intro.label(text="Primr", icon="SCRIPT")
-            self._draw_wrapped_text(
-                intro,
-                "Hey! Describe what you want to build. Use @ to reference objects in your scene.",
-            )
-        else:
-            for message in messages:
-                self._draw_message(chat, message)
+        for msg in messages:
+            draw_message(layout, msg)
+
+        if state.is_thinking:
+            box = layout.box()
+            box.label(text="Primr is thinking...", icon="SORTTIME")
 
         layout.separator()
-        composer = layout.box()
-        composer.label(text="Describe what to build")
-        composer.prop(scene, "primr_prompt", text="")
 
-        actions = composer.row(align=True)
-        actions.operator("primr.submit", text="Generate", icon="PLAY")
-        actions.operator("primr.clear", text="Clear", icon="TRASH")
+        row = layout.row(align=True)
+        row.prop(scene, "primr_image_path", text="")
+        row.operator("primr.clear_image", text="", icon="X")
+
+        layout.prop(scene, "primr_prompt", text="")
+        row = layout.row(align=True)
+        row.operator("primr.submit", text="Generate", icon="PLAY")
+        row.operator("primr.clear", text="", icon="TRASH")

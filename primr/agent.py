@@ -1,3 +1,5 @@
+import base64
+import os
 import ollama
 from . import context
 
@@ -10,7 +12,32 @@ conversation_history = [{"role": "system", "content": SYSTEM_PROMPT}]
 prompt_history = []
 
 
-def ask(prompt: str, model: str = "gemma3:4b", url: str = "http://localhost:11434") -> str:
+def get_local_models() -> list[str]:
+    try:
+        response = ollama.list()
+        models_data = response.get("models", []) if isinstance(response, dict) else getattr(response, "models", [])
+        models: list[str] = []
+
+        for item in models_data:
+            if isinstance(item, dict):
+                name = item.get("model") or item.get("name")
+            else:
+                name = getattr(item, "model", None) or getattr(item, "name", None)
+
+            if name:
+                models.append(name)
+
+        return models or ["gemma4:4b"]
+    except Exception:
+        return ["gemma4:4b"]
+
+
+def ask(
+    prompt: str,
+    model: str = "gemma3:4b",
+    url: str = "http://localhost:11434",
+    image_path: str = "",
+) -> str:
     global conversation_history
     global prompt_history
     if len(prompt_history) > 5:
@@ -19,10 +46,24 @@ def ask(prompt: str, model: str = "gemma3:4b", url: str = "http://localhost:1143
         conversation_history = conversation_history[-20:]
     scene_info = context.get_scene_context()
     enriched_prompt = f"Current scene:\n{scene_info}\n\nUser instruction: {prompt}"
-    conversation_history.append({"role": "user", "content": enriched_prompt})
-    response = ollama.chat(model="gemma4:e4b", messages=[
+    if image_path and os.path.exists(image_path):
+        with open(image_path, "rb") as file:
+            image_data = base64.b64encode(file.read()).decode()
+        user_message = {
+            "role": "user",
+            "content": enriched_prompt,
+            "images": [image_data],
+        }
+    else:
+        user_message = {
+            "role": "user",
+            "content": enriched_prompt,
+        }
+
+    conversation_history.append(user_message)
+    response = ollama.chat(model=model, messages=[
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": enriched_prompt}
+        user_message
     ])
     return response['message']['content']
 
