@@ -44,7 +44,7 @@ def ask(
         prompt_history = prompt_history[-5:]
     if len(conversation_history) > 20:
         conversation_history = conversation_history[-20:]
-    scene_info = context.get_scene_context()
+    scene_info = context.get_scene_context(prompt=prompt)
     enriched_prompt = f"Current scene:\n{scene_info}\n\nUser instruction: {prompt}"
     if image_path and os.path.exists(image_path):
         with open(image_path, "rb") as file:

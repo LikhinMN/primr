@@ -53,6 +53,18 @@ class PRIMR_OT_clear(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class PRIMR_OT_mention_object(bpy.types.Operator):
+    bl_idname = "primr.mention_object"
+    bl_label = "@ Mention Object"
+
+    def execute(self, context):
+        obj_name = context.scene.primr_object_picker
+        if obj_name and obj_name != "NONE":
+            context.scene.primr_prompt += f"@{obj_name} "
+            context.scene.primr_mention = obj_name
+        return {"FINISHED"}
+
+
 class PRIMR_OT_clear_image(bpy.types.Operator):
     bl_idname = "primr.clear_image"
     bl_label = "Clear Image"

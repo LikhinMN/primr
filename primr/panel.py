@@ -86,5 +86,8 @@ class PRIMR_PT_main(bpy.types.Panel):
 
         layout.prop(scene, "primr_prompt", text="")
         row = layout.row(align=True)
+        row.prop(scene, "primr_object_picker", text="")
+        row.operator("primr.mention_object", text="@ Mention", icon="EYEDROPPER")
+        row = layout.row(align=True)
         row.operator("primr.submit", text="Generate", icon="PLAY")
         row.operator("primr.clear", text="", icon="TRASH")
