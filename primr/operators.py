@@ -1,4 +1,5 @@
 import bpy
+import threading
 from . import executor, agent, state
 
 
@@ -9,22 +10,56 @@ class PRIMR_OT_submit(bpy.types.Operator):
 
     def execute(self, context):
         prompt = context.scene.primr_prompt
+        if not prompt.strip():
+            return {"CANCELLED"}
+
+        scene = context.scene
+        model = scene.primr_model
+        url = scene.primr_ollama_url
+        image_path = scene.primr_image_path
+        screen = context.screen
+
         state.add_message("user", prompt)
-        context.scene.primr_prompt = ""
         state.set_thinking(True)
-        response = agent.ask(
-            prompt,
-            model=context.scene.primr_model,
-            url=context.scene.primr_ollama_url,
-            image_path=context.scene.primr_image_path,
-        )
-        code = executor.extract_code(response)
-        result = executor.execute_code(code)
-        state.add_message("assistant", code, is_code=True)
-        state.set_thinking(False)
-        agent.add_to_prompt(prompt, result)
-        context.scene.primr_result = result
-        print(f"code: {code}\nresult: {result}")
+        scene.primr_prompt = ""
+
+        def redraw_view3d_areas():
+            if not screen:
+                return
+            for area in screen.areas:
+                if area.type == "VIEW_3D":
+                    area.tag_redraw()
+
+        def run():
+            try:
+                response = agent.ask(
+                    prompt,
+                    model=model,
+                    url=url,
+                    image_path=image_path,
+                )
+                code = executor.extract_code(response)
+                result = executor.execute_code(code)
+                state.add_message(
+                    "assistant",
+                    code,
+                    is_code=True,
+                    status="done" if result == "Success" else "error",
+                )
+                agent.add_to_prompt(prompt, result)
+                scene.primr_result = result
+                print(f"code: {code}\nresult: {result}")
+            except Exception as error:
+                state.add_message("assistant", str(error), status="error")
+                scene.primr_result = f"Error: {error}"
+            finally:
+                state.set_thinking(False)
+                redraw_view3d_areas()
+
+        thread = threading.Thread(target=run, daemon=True)
+        thread.start()
+
+        redraw_view3d_areas()
         return {"FINISHED"}
 
 

@@ -27,6 +27,14 @@ def ensure_dependencies():
         import ollama
 
 
+def refresh_panel():
+    for window in bpy.context.window_manager.windows:
+        for area in window.screen.areas:
+            if area.type == "VIEW_3D":
+                area.tag_redraw()
+    return 0.5
+
+
 def register():
     ensure_dependencies()
     bpy.types.Scene.primr_prompt = bpy.props.StringProperty(
@@ -76,6 +84,7 @@ def register():
     bpy.utils.register_class(operators.PRIMR_OT_mention_object)
     bpy.utils.register_class(operators.PRIMR_OT_clear_image)
     bpy.utils.register_class(operators.PRIMR_OT_clear)
+    bpy.app.timers.register(refresh_panel, first_interval=0.5)
 
 
 def unregister():
@@ -89,6 +98,8 @@ def unregister():
     del bpy.types.Scene.primr_mention
     del bpy.types.Scene.primr_object_picker
     del bpy.types.Scene.primr_show_settings
+    if bpy.app.timers.is_registered(refresh_panel):
+        bpy.app.timers.unregister(refresh_panel)
     bpy.utils.unregister_class(operators.PRIMR_OT_clear)
     bpy.utils.unregister_class(operators.PRIMR_OT_clear_image)
     bpy.utils.unregister_class(operators.PRIMR_OT_mention_object)

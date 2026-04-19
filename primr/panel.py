@@ -89,5 +89,10 @@ class PRIMR_PT_main(bpy.types.Panel):
         row.prop(scene, "primr_object_picker", text="")
         row.operator("primr.mention_object", text="@ Mention", icon="EYEDROPPER")
         row = layout.row(align=True)
-        row.operator("primr.submit", text="Generate", icon="PLAY")
-        row.operator("primr.clear", text="", icon="TRASH")
+        if state.is_thinking:
+            row.enabled = False
+            row.operator("primr.submit", text="Thinking...", icon="SORTTIME")
+            row.operator("primr.clear", text="", icon="TRASH")
+        else:
+            row.operator("primr.submit", text="Generate", icon="PLAY")
+            row.operator("primr.clear", text="", icon="TRASH")
