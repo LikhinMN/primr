@@ -1,6 +1,6 @@
 import bpy
 import threading
-from . import executor, agent, state
+from . import agent, state
 
 
 class PRIMR_OT_submit(bpy.types.Operator):
@@ -14,9 +14,6 @@ class PRIMR_OT_submit(bpy.types.Operator):
             return {"CANCELLED"}
 
         scene = context.scene
-        model = scene.primr_model
-        url = scene.primr_ollama_url
-        image_path = scene.primr_image_path
         screen = context.screen
 
         state.add_message("user", prompt)
@@ -31,24 +28,27 @@ class PRIMR_OT_submit(bpy.types.Operator):
                     area.tag_redraw()
 
         def run():
+            from .agents.loop import run_agent
+
+            def on_update(event, data):
+                state.set_thinking(event != "done")
+                if event == "step":
+                    state.add_message("assistant", f"* {data}")
+                elif event == "done":
+                    summary = data
+                    msg = f"Done. {summary['succeeded']}/{summary['total']} steps succeeded."
+                    if summary["errors"]:
+                        msg += f" {summary['failed']} failed."
+                    state.add_message("assistant", msg)
+                    scene.primr_result = msg
+                redraw_view3d_areas()
+
             try:
-                response = agent.ask(
+                run_agent(
                     prompt,
-                    model=model,
-                    url=url,
-                    image_path=image_path,
+                    model=context.scene.primr_model,
+                    on_update=on_update,
                 )
-                code = executor.extract_code(response)
-                result = executor.execute_code(code)
-                state.add_message(
-                    "assistant",
-                    code,
-                    is_code=True,
-                    status="done" if result == "Success" else "error",
-                )
-                agent.add_to_prompt(prompt, result)
-                scene.primr_result = result
-                print(f"code: {code}\nresult: {result}")
             except Exception as error:
                 state.add_message("assistant", str(error), status="error")
                 scene.primr_result = f"Error: {error}"

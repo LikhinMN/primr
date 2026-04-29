@@ -1,7 +1,11 @@
 import ollama
 import json
+import threading
+import bpy
 from ..queue.runner import task_queue
 from ..queue.task import Task
+from .. import context as scene_ctx
+from .. import executor as bpy_executor
 
 CRITIC_PROMPT = """You are Primr Critic, an agent that validates Blender (`bpy`) code execution.
 
@@ -50,6 +54,33 @@ Constraints:
 """
 
 
+def _get_scene_context_main_thread() -> str:
+    if threading.current_thread() is threading.main_thread():
+        return scene_ctx.get_scene_context()
+
+    done = threading.Event()
+    result = ""
+    error = None
+
+    def callback():
+        nonlocal result, error
+        try:
+            result = scene_ctx.get_scene_context()
+        except Exception as callback_error:
+            error = callback_error
+        finally:
+            done.set()
+        return None
+
+    bpy.app.timers.register(callback, first_interval=0.0)
+    done.wait()
+
+    if error is not None:
+        raise error
+
+    return result
+
+
 def review_task(task: Task, model: str) -> bool:
     review_prompt = f"Task: {task.step}\nCode:\n{task.bpy_code}\nResult: {task.result}"
 
@@ -68,10 +99,39 @@ def review_task(task: Task, model: str) -> bool:
         return True
 
     if task.retry_count < 3:
+        current_scene = _get_scene_context_main_thread()
+        fix_prompt = (
+            f"Scene state:\n{current_scene}\n\n"
+            f"Failed task: {task.step}\n"
+            f"Failed code:\n{task.bpy_code}\n"
+            f"Error: {review.get('reason', 'Unknown failure')}\n\n"
+            "Write corrected bpy code:"
+        )
+        fix_response = ollama.chat(
+            model=model,
+            messages=[
+                {"role": "system", "content": CRITIC_PROMPT},
+                {"role": "user", "content": fix_prompt},
+            ],
+            stream=False,
+        )
+        fix_code = bpy_executor.extract_code(fix_response["message"]["content"])
+        if not fix_code.strip():
+            fix_code = review.get("fix", "")
+        if not fix_code.strip():
+            task_queue.update_task(
+                task.id,
+                status="failed",
+                error=review.get("reason", "Review failed"),
+            )
+            return False
+
         task_queue.update_task(
             task.id,
-            status="pending",
-            bpy_code=review.get("fix", ""),
+            status="ready",
+            bpy_code=fix_code,
+            result="",
+            error="",
             retry_count=task.retry_count + 1,
         )
         return False

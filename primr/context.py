@@ -15,6 +15,11 @@ def get_scene_context(prompt: str = "") -> str:
         for obj in mentioned:
             lines.append(f"Mentioned Object: {obj.name} ({obj.type})")
 
+    lines.append("Existing objects (use exact names to reference them):")
+    for obj in objects:
+        location = tuple(round(value, 2) for value in obj.location)
+        lines.append(f"  - name: '{obj.name}' | type: {obj.type} | location: {location}")
+
     for obj in objects:
         prefix = "Object*" if obj in mentioned else "Object"
         lines.append(f"{prefix}: {obj.name} ({obj.type})")

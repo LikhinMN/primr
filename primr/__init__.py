@@ -35,6 +35,19 @@ def refresh_panel():
     return 0.5
 
 
+def primr_execution_timer():
+    from . import state
+    from .agents.loop import execute_ready_tasks
+
+    if state.is_thinking:
+        try:
+            execute_ready_tasks()
+        except Exception:
+            # Keep timer alive even if one execution cycle raises.
+            pass
+    return 0.1
+
+
 def register():
     ensure_dependencies()
     bpy.types.Scene.primr_prompt = bpy.props.StringProperty(
@@ -85,6 +98,7 @@ def register():
     bpy.utils.register_class(operators.PRIMR_OT_clear_image)
     bpy.utils.register_class(operators.PRIMR_OT_clear)
     bpy.app.timers.register(refresh_panel, first_interval=0.5)
+    bpy.app.timers.register(primr_execution_timer, first_interval=0.1)
 
 
 def unregister():
@@ -100,6 +114,8 @@ def unregister():
     del bpy.types.Scene.primr_show_settings
     if bpy.app.timers.is_registered(refresh_panel):
         bpy.app.timers.unregister(refresh_panel)
+    if bpy.app.timers.is_registered(primr_execution_timer):
+        bpy.app.timers.unregister(primr_execution_timer)
     bpy.utils.unregister_class(operators.PRIMR_OT_clear)
     bpy.utils.unregister_class(operators.PRIMR_OT_clear_image)
     bpy.utils.unregister_class(operators.PRIMR_OT_mention_object)

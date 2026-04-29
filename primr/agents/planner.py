@@ -39,6 +39,8 @@ Behavior Rules:
 
 
 def plan(goal: str, model: str, on_step=None) -> list[Task]:
+    task_queue.clear()
+
     response = ollama.chat(
         model=model,
         messages=[
@@ -52,9 +54,15 @@ def plan(goal: str, model: str, on_step=None) -> list[Task]:
     content = response["message"]["content"]
     plan_data = json.loads(content)
 
+    id_map: dict[str, str] = {}
     created_tasks: list[Task] = []
     for step in plan_data.get("steps", []):
-        task = task_queue.add_task(step["step"], depends_on=step["depends_on"])
+        planner_deps = step.get("depends_on", [])
+        real_deps = [id_map[dep_id] for dep_id in planner_deps if dep_id in id_map]
+        task = task_queue.add_task(step["step"], depends_on=real_deps)
+        planner_id = step.get("id")
+        if planner_id:
+            id_map[planner_id] = task.id
         created_tasks.append(task)
         if on_step is not None:
             on_step(step["step"])

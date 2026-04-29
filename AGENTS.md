@@ -15,6 +15,8 @@
 - Prompt enrichment is in `primr/agent.py`: `context.get_scene_context(prompt=...)` adds object list and prioritizes `@ObjectName` mentions before sending to Ollama.
 - `agent.ask(...)` optionally encodes `scene.primr_image_path` and sends it as an Ollama image attachment when the file exists.
 - Code execution is centralized in `primr/executor.py` and uses `exec(code, {"bpy": bpy})` after `bpy.ops.ed.undo_push(...)`.
+- Experimental multi-agent scaffolding exists in `primr/agents/` (`planner.py`, `executor.py`, `critic.py`) plus task orchestration in `primr/queue/`, but this path is not wired into `register()`, panel operators, or the `primr.submit` flow.
+- `primr/tools/` modules are currently placeholders (empty files) and are not imported by active runtime code.
 
 ## Critical workflows
 - Build distributable zip: `make zip`.
@@ -26,9 +28,11 @@
 - Operator IDs are stable integration points: `primr.submit` and `primr.clear` (`primr/operators.py`); panel wiring also depends on `primr.toggle_code`, `primr.mention_object`, and `primr.clear_image`.
 - Conversation shown in UI comes from in-memory `state.messages` (`primr/state.py`) rendered in `primr/panel.py`; `scene.primr_history` is currently not used by the panel/operator flow.
 - `agent.ask(prompt, model, url, image_path)` passes the selected `model` into `ollama.chat(...)`, but `url` is still not used; keep this in mind when changing settings behavior.
+- `agent.ask(...)` appends to `conversation_history`, but the actual `ollama.chat(...)` request currently sends only `SYSTEM_PROMPT` + current `user_message`; prior turns are not included.
 - `ensure_dependencies()` in `primr/__init__.py` installs `ollama` with pip at add-on register time if missing.
 - Model output is expected to be raw Python or fenced ```python blocks; parser strips fences if present (`executor.extract_code`).
 - `primr/state.py` is part of the active runtime path (`operators.py` + `panel.py`) for chat messages, code expand/collapse state, and thinking state.
+- Success-status mapping is currently inconsistent in `primr/operators.py`: code marks assistant status as `done` only when result equals `"Success"`, but `executor.execute_code(...)` returns `"Code executed successfully."` on success.
 
 ## External integrations
 - Blender Python API (`bpy`) is used across all runtime paths.
