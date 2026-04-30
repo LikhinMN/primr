@@ -1,22 +1,5 @@
-from dataclasses import dataclass, field
-from typing import Literal
-import uuid
-
-
-@dataclass
-class Task:
-    id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
-    step: str = ""
-    status: Literal[
-        "pending",
-        "generating",
-        "ready",
-        "executing",
-        "done",
-        "failed"
-    ] = "pending"
-    bpy_code: str = ""
-    result: str = ""
-    retry_count: int = 0
-    depends_on: list = field(default_factory=list)
-    error: str = ""
+"""
+DELETED: queue/task.py removed as part of single-shot agent refactor.
+If you relied on Task dataclass, consider interacting with the new
+single-shot codegen flow in `primr.agents.coder` and validator/critic.
+"""
