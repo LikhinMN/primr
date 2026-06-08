@@ -120,8 +120,8 @@ Think step by step internally, then output only the final coordinated script.
 """
 
 
-def generate(goal: str, model: str, api_key: str, extra_context: str = "") -> str:
-    """Generate a single coordinated bpy script for the given goal using NVIDIA NIM.
+def generate(goal: str, model: str, api_key: str, base_url: str, extra_context: str = "") -> str:
+    """Generate a single coordinated bpy script for the given goal using OpenAI-compatible API.
 
     Returns the extracted Python code as a string.
     """
@@ -129,9 +129,10 @@ def generate(goal: str, model: str, api_key: str, extra_context: str = "") -> st
 
     user_message = f"Current scene:\n{scene}\n\n{extra_context}\n\nGoal: {goal}"
 
+    # Default to an empty string if api_key is None (e.g., for local endpoints)
     client = openai.OpenAI(
-        base_url="https://integrate.api.nvidia.com/v1",
-        api_key=api_key
+        base_url=base_url,
+        api_key=api_key or "local"
     )
 
     response = client.chat.completions.create(

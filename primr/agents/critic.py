@@ -28,8 +28,8 @@ OUTPUT: Only raw corrected Python code. No markdown, no explanation.
 """
 
 
-def review_and_fix(goal: str, code: str, error: str, model: str, api_key: str, scene: str) -> str:
-    """Ask the critic model to rewrite the failed script using NVIDIA NIM.
+def review_and_fix(goal: str, code: str, error: str, model: str, api_key: str, base_url: str, scene: str) -> str:
+    """Ask the critic model to rewrite the failed script using OpenAI-compatible API.
 
     Returns a corrected Python script (raw text) extracted by executor.extract_code.
     """
@@ -41,8 +41,8 @@ def review_and_fix(goal: str, code: str, error: str, model: str, api_key: str, s
     )
 
     client = openai.OpenAI(
-        base_url="https://integrate.api.nvidia.com/v1",
-        api_key=api_key
+        base_url=base_url,
+        api_key=api_key or "local"
     )
 
     response = client.chat.completions.create(

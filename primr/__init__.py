@@ -81,8 +81,13 @@ def register():
         name="History",
         default=""
     )
+    bpy.types.Scene.primr_base_url = bpy.props.StringProperty(
+        name="Base URL",
+        description="API endpoint (e.g., https://integrate.api.nvidia.com/v1, https://openrouter.ai/api/v1)",
+        default="https://integrate.api.nvidia.com/v1"
+    )
     bpy.types.Scene.primr_api_key = bpy.props.StringProperty(
-        name="NVIDIA API Key",
+        name="API Key",
         default="",
         subtype="PASSWORD"
     )
@@ -132,6 +137,7 @@ def unregister():
     del bpy.types.Scene.primr_prompt
     del bpy.types.Scene.primr_result
     del bpy.types.Scene.primr_history
+    del bpy.types.Scene.primr_base_url
     del bpy.types.Scene.primr_api_key
     del bpy.types.Scene.primr_model
     del bpy.types.Scene.primr_image_path

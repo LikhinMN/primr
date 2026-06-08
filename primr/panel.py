@@ -79,7 +79,8 @@ class PRIMR_PT_main(bpy.types.Panel):
             col = box.column(align=True)
             col.label(text="AI Configuration", icon='TOOL_SETTINGS')
             col.separator()
-            col.prop(scene, "primr_api_key", text="NVIDIA Key")
+            col.prop(scene, "primr_base_url", text="API Base URL")
+            col.prop(scene, "primr_api_key", text="API Key")
             col.prop(scene, "primr_model", text="Model")
             layout.separator()
 

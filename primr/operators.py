@@ -44,9 +44,10 @@ class PRIMR_OT_submit(bpy.types.Operator):
 
             model = scene.primr_model
             api_key = scene.primr_api_key
+            base_url = scene.primr_base_url
 
-            if not api_key:
-                state.add_message("assistant", "⚠️ NVIDIA API Key is required. Please set it in Settings.", status="error")
+            if not api_key and "localhost" not in base_url and "127.0.0.1" not in base_url:
+                state.add_message("assistant", "⚠️ API Key is required for cloud providers. Please set it in Settings.", status="error")
                 state.set_thinking(False)
                 return
 
@@ -55,12 +56,11 @@ class PRIMR_OT_submit(bpy.types.Operator):
 
                 # Generate full script
                 try:
-                    code = generate(prompt, model, api_key, extra_context)
+                    code = generate(prompt, model, api_key, base_url, extra_context)
                 except Exception as e:
                     error_msg = str(e)
                     if "404" in error_msg or "NotFoundError" in error_msg:
-                        state.add_message("assistant", f"⚠️ The model '{model}' does not exist on NVIDIA NIM. Resetting to default (meta/llama-3.1-405b-instruct). Please try again.", status="error")
-                        scene.primr_model = "meta/llama-3.1-405b-instruct"
+                        state.add_message("assistant", f"⚠️ The model '{model}' does not exist at the given API endpoint. Please check your model name and Base URL.", status="error")
                         state.set_thinking(False)
                         return
                     else:
@@ -90,7 +90,7 @@ class PRIMR_OT_submit(bpy.types.Operator):
                     break
                 else:
                     scene_str = scene_ctx.get_scene_context()
-                    code = review_and_fix(prompt, code, result, model, api_key, scene_str)
+                    code = review_and_fix(prompt, code, result, model, api_key, base_url, scene_str)
                     extra_context = f"Previous attempt failed with: {result}"
                     state.add_message("assistant", f"⚠️ Attempt {attempt} failed, retrying...")
 
