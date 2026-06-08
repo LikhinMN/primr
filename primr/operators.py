@@ -16,6 +16,11 @@ class PRIMR_OT_submit(bpy.types.Operator):
         scene = context.scene
         screen = context.screen
 
+        prefs = context.preferences.addons[__package__].preferences
+        model = prefs.primr_model
+        api_key = prefs.primr_api_key
+        base_url = prefs.primr_base_url
+
         state.add_message("user", prompt)
         state.set_thinking(True)
         scene.primr_prompt = ""
@@ -41,10 +46,6 @@ class PRIMR_OT_submit(bpy.types.Operator):
 
             state.set_thinking(True)
             state.add_message("assistant", "Generating coordinated script...")
-
-            model = scene.primr_model
-            api_key = scene.primr_api_key
-            base_url = scene.primr_base_url
 
             if not api_key and "localhost" not in base_url and "127.0.0.1" not in base_url:
                 state.add_message("assistant", "⚠️ API Key is required for cloud providers. Please set it in Settings.", status="error")

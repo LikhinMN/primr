@@ -51,11 +51,37 @@ def refresh_panel():
     return 0.5
 
 
+class PrimrPreferences(bpy.types.AddonPreferences):
+    bl_idname = __package__
+
+    primr_base_url: bpy.props.StringProperty(
+        name="API Base URL",
+        description="API endpoint (e.g., https://integrate.api.nvidia.com/v1, https://openrouter.ai/api/v1)",
+        default="https://integrate.api.nvidia.com/v1"
+    )
+    primr_api_key: bpy.props.StringProperty(
+        name="API Key",
+        default="",
+        subtype="PASSWORD"
+    )
+    primr_model: bpy.props.StringProperty(
+        name="Model",
+        description="Model name (e.g., meta/llama-3.1-405b-instruct)",
+        default="meta/llama-3.1-405b-instruct"
+    )
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "primr_base_url")
+        layout.prop(self, "primr_api_key")
+        layout.prop(self, "primr_model")
+
 # ------------------------------------------------------------------ #
 #  Registration
 # ------------------------------------------------------------------ #
 
 _classes = (
+    PrimrPreferences,
     panel.PRIMR_PT_main,
     operators.PRIMR_OT_submit,
     operators.PRIMR_OT_toggle_code,
@@ -81,21 +107,6 @@ def register():
         name="History",
         default=""
     )
-    bpy.types.Scene.primr_base_url = bpy.props.StringProperty(
-        name="Base URL",
-        description="API endpoint (e.g., https://integrate.api.nvidia.com/v1, https://openrouter.ai/api/v1)",
-        default="https://integrate.api.nvidia.com/v1"
-    )
-    bpy.types.Scene.primr_api_key = bpy.props.StringProperty(
-        name="API Key",
-        default="",
-        subtype="PASSWORD"
-    )
-    bpy.types.Scene.primr_model = bpy.props.StringProperty(
-        name="Model",
-        description="NVIDIA NIM model name (e.g., meta/llama-3.1-405b-instruct, google/gemma-2-27b-it)",
-        default="meta/llama-3.1-405b-instruct"
-    )
     bpy.types.Scene.primr_image_path = bpy.props.StringProperty(
         name="Reference Image",
         description="Path to reference image",
@@ -110,10 +121,6 @@ def register():
     bpy.types.Scene.primr_object_picker = bpy.props.EnumProperty(
         name="Pick Object",
         items=get_scene_objects
-    )
-    bpy.types.Scene.primr_show_settings = bpy.props.BoolProperty(
-        name="Show Settings",
-        default=False
     )
 
     for cls in _classes:
@@ -137,13 +144,9 @@ def unregister():
     del bpy.types.Scene.primr_prompt
     del bpy.types.Scene.primr_result
     del bpy.types.Scene.primr_history
-    del bpy.types.Scene.primr_base_url
-    del bpy.types.Scene.primr_api_key
-    del bpy.types.Scene.primr_model
     del bpy.types.Scene.primr_image_path
     del bpy.types.Scene.primr_mention
     del bpy.types.Scene.primr_object_picker
-    del bpy.types.Scene.primr_show_settings
 
 
 if __name__ == "__main__":

@@ -70,19 +70,10 @@ class PRIMR_PT_main(bpy.types.Panel):
 
         # --- Top Bar (Settings Toggle & Clear) ---
         row = layout.row(align=True)
-        row.prop(scene, "primr_show_settings", icon="PREFERENCES", text="Settings", toggle=True)
+        # Instead of inline settings, just provide a button that opens preferences
+        op = row.operator("screen.userpref_show", text="Settings", icon="PREFERENCES")
+        op.filter_text = "Primr"
         row.operator("primr.clear", text="", icon="TRASH", emboss=False)
-
-        # --- Settings Area ---
-        if scene.primr_show_settings:
-            box = layout.box()
-            col = box.column(align=True)
-            col.label(text="AI Configuration", icon='TOOL_SETTINGS')
-            col.separator()
-            col.prop(scene, "primr_base_url", text="API Base URL")
-            col.prop(scene, "primr_api_key", text="API Key")
-            col.prop(scene, "primr_model", text="Model")
-            layout.separator()
 
         # --- Chat Area ---
         messages = state.get_messages()
