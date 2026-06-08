@@ -41,14 +41,17 @@ complete, self-contained Python script using the `bpy` module.
            obj.data.materials.append(mat)
 
 ━━━━━━━━━━━━━━━━━━━  TRANSFORMS & POSITIONING  ━━━━━━━━━━━━━━
-10. Position objects logically in 3D space (ground plane at Z=0).
+10. ALWAYS build objects in real-world metric scale. Never make
+    miniature objects (e.g. 2mm tables). A standard table is
+    ~1.2m long, 0.75m high. Default cubes are 2x2x2m!
+11. Position objects logically in 3D space (ground plane at Z=0).
     When stacking objects, use dimensions to calculate offsets:
         height = obj.dimensions.z
         obj.location.z = height / 2  # sit on ground
-11. For rotation use radians:
+12. For rotation use radians:
         import math
         obj.rotation_euler = (math.radians(90), 0, 0)
-12. Apply transforms when needed:
+13. Apply transforms when needed:
         bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
 
 ━━━━━━━━━━━━━━━━━━━  MODIFIERS  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
