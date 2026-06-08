@@ -86,15 +86,9 @@ def register():
         default="",
         subtype="PASSWORD"
     )
-    bpy.types.Scene.primr_model = bpy.props.EnumProperty(
+    bpy.types.Scene.primr_model = bpy.props.StringProperty(
         name="Model",
-        items=[
-            ("meta/llama-3.1-405b-instruct", "Llama 3.1 405B", "Meta's most capable model"),
-            ("meta/llama-3.1-70b-instruct", "Llama 3.1 70B", "Fast and highly capable"),
-            ("nvidia/nemotron-4-340b-instruct", "Nemotron 4 340B", "NVIDIA's large reasoning model"),
-            ("google/gemma-2-27b-it", "Gemma 2 27B", "Google's highly efficient model"),
-            ("mistralai/mistral-large-2-instruct", "Mistral Large 2", "Mistral's flagship model"),
-        ],
+        description="NVIDIA NIM model name (e.g., meta/llama-3.1-405b-instruct, google/gemma-2-27b-it)",
         default="meta/llama-3.1-405b-instruct"
     )
     bpy.types.Scene.primr_image_path = bpy.props.StringProperty(
