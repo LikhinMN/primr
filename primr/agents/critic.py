@@ -1,4 +1,4 @@
-import ollama
+import openai
 from .. import executor as bpy_executor
 
 CRITIC_PROMPT = """
@@ -12,8 +12,8 @@ Rules:
 """
 
 
-def review_and_fix(goal: str, code: str, error: str, model: str, scene: str) -> str:
-    """Ask the critic model to rewrite the failed script.
+def review_and_fix(goal: str, code: str, error: str, model: str, api_key: str, scene: str) -> str:
+    """Ask the critic model to rewrite the failed script using NVIDIA NIM.
 
     Returns a corrected Python script (raw text) extracted by executor.extract_code.
     """
@@ -24,13 +24,18 @@ def review_and_fix(goal: str, code: str, error: str, model: str, scene: str) -> 
         f"Error: {error}"
     )
 
-    response = ollama.chat(
+    client = openai.OpenAI(
+        base_url="https://integrate.api.nvidia.com/v1",
+        api_key=api_key
+    )
+
+    response = client.chat.completions.create(
         model=model,
         messages=[
             {"role": "system", "content": CRITIC_PROMPT},
             {"role": "user", "content": user_message},
         ],
-        stream=False,
     )
 
-    return bpy_executor.extract_code(response["message"]["content"]) or ""
+    content = response.choices[0].message.content
+    return bpy_executor.extract_code(content) or ""

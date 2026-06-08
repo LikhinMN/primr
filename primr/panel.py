@@ -66,7 +66,7 @@ class PRIMR_PT_main(bpy.types.Panel):
         )
         if scene.primr_show_settings:
             box.prop(scene, "primr_model", text="Model")
-            box.prop(scene, "primr_ollama_url", text="Ollama URL")
+            box.prop(scene, "primr_api_key", text="API Key")
 
         layout.separator()
 

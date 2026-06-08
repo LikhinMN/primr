@@ -1,4 +1,4 @@
-import ollama
+import openai
 from .. import context as scene_context
 from .. import executor as bpy_executor
 
@@ -24,8 +24,8 @@ Think step by step internally, output only the final coordinated script.
 """
 
 
-def generate(goal: str, model: str, extra_context: str = "") -> str:
-    """Generate a single coordinated bpy script for the given goal using ollama.
+def generate(goal: str, model: str, api_key: str, extra_context: str = "") -> str:
+    """Generate a single coordinated bpy script for the given goal using NVIDIA NIM.
 
     Returns the extracted Python code as a string.
     """
@@ -33,14 +33,19 @@ def generate(goal: str, model: str, extra_context: str = "") -> str:
 
     user_message = f"Current scene:\n{scene}\n\n{extra_context}\n\nGoal: {goal}"
 
-    response = ollama.chat(
+    client = openai.OpenAI(
+        base_url="https://integrate.api.nvidia.com/v1",
+        api_key=api_key
+    )
+
+    response = client.chat.completions.create(
         model=model,
         messages=[
             {"role": "system", "content": MASTER_PROMPT},
             {"role": "user", "content": user_message},
         ],
-        stream=False,
     )
 
-    return bpy_executor.extract_code(response["message"]["content"]) or ""
+    content = response.choices[0].message.content
+    return bpy_executor.extract_code(content) or ""
 

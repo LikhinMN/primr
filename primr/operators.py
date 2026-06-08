@@ -43,12 +43,18 @@ class PRIMR_OT_submit(bpy.types.Operator):
             state.add_message("assistant", "Generating coordinated script...")
 
             model = scene.primr_model
+            api_key = scene.primr_api_key
+
+            if not api_key:
+                state.add_message("assistant", "⚠️ NVIDIA API Key is required. Please set it in Settings.", status="error")
+                state.set_thinking(False)
+                return
 
             while attempt < max_retries:
                 attempt += 1
 
                 # Generate full script
-                code = generate(prompt, model, extra_context)
+                code = generate(prompt, model, api_key, extra_context)
 
                 # Validate syntax
                 valid, syntax_error = validate(code)
@@ -60,15 +66,19 @@ class PRIMR_OT_submit(bpy.types.Operator):
                 # Show code in chat
                 state.add_message("assistant", code, is_code=True)
 
-                # Execute
-                result = bpy_executor.execute_code(code)
+                # Execute thread-safely
+                result_event = threading.Event()
+                exec_result = []
+                bpy_executor.code_queue.put((code, exec_result, result_event))
+                result_event.wait()
+                result = exec_result[0]
 
                 if result == "Success":
                     state.add_message("assistant", f"✅ Done in {attempt} attempt(s).")
                     break
                 else:
-                    scene = scene_ctx.get_scene_context()
-                    code = review_and_fix(prompt, code, result, model, scene)
+                    scene_str = scene_ctx.get_scene_context()
+                    code = review_and_fix(prompt, code, result, model, api_key, scene_str)
                     extra_context = f"Previous attempt failed with: {result}"
                     state.add_message("assistant", f"⚠️ Attempt {attempt} failed, retrying...")
 
