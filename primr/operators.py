@@ -54,7 +54,19 @@ class PRIMR_OT_submit(bpy.types.Operator):
                 attempt += 1
 
                 # Generate full script
-                code = generate(prompt, model, api_key, extra_context)
+                try:
+                    code = generate(prompt, model, api_key, extra_context)
+                except Exception as e:
+                    error_msg = str(e)
+                    if "404" in error_msg or "NotFoundError" in error_msg:
+                        state.add_message("assistant", f"⚠️ The model '{model}' does not exist on NVIDIA NIM. Resetting to default (meta/llama-3.1-405b-instruct). Please try again.", status="error")
+                        scene.primr_model = "meta/llama-3.1-405b-instruct"
+                        state.set_thinking(False)
+                        return
+                    else:
+                        state.add_message("assistant", f"⚠️ API Error: {error_msg}", status="error")
+                        state.set_thinking(False)
+                        return
 
                 # Validate syntax
                 valid, syntax_error = validate(code)
