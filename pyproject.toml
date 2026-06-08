@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "bpy>=5.0.1",
-    "ollama>=0.6.1",
+    "openai>=1.0.0",
 ]
 [project.urls]
 Homepage = "https://github.com/LikhinMN/primr"

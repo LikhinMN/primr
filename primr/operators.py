@@ -73,7 +73,7 @@ class PRIMR_OT_submit(bpy.types.Operator):
                 result_event.wait()
                 result = exec_result[0]
 
-                if result == "Success":
+                if result.startswith("Success"):
                     state.add_message("assistant", f"✅ Done in {attempt} attempt(s).")
                     break
                 else:

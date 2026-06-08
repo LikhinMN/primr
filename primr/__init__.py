@@ -1,13 +1,22 @@
 import bpy
 import subprocess
 import sys
+import queue
 from . import panel
 from . import operators
 from . import agent
 
+
 def primr_execution_timer():
-    import queue
+    """Main-thread timer that drains the execution queue.
+
+    Background threads place (code, result_list, event) tuples into
+    executor.code_queue. This timer runs on Blender's main thread at
+    ~10 Hz, picks up queued code, executes it safely, writes the result
+    back, and signals the waiting thread.
+    """
     from . import executor
+
     try:
         code, result_list, event = executor.code_queue.get_nowait()
         result = executor.execute_code(code)
@@ -16,6 +25,8 @@ def primr_execution_timer():
     except queue.Empty:
         pass
     return 0.1
+
+
 def get_scene_objects(self, context):
     scene = context.scene if context else bpy.context.scene
     objects = scene.objects if scene else []
@@ -40,10 +51,23 @@ def refresh_panel():
     return 0.5
 
 
+# ------------------------------------------------------------------ #
+#  Registration
+# ------------------------------------------------------------------ #
+
+_classes = (
+    panel.PRIMR_PT_main,
+    operators.PRIMR_OT_submit,
+    operators.PRIMR_OT_toggle_code,
+    operators.PRIMR_OT_mention_object,
+    operators.PRIMR_OT_clear_image,
+    operators.PRIMR_OT_clear,
+)
 
 
 def register():
     ensure_dependencies()
+
     bpy.types.Scene.primr_prompt = bpy.props.StringProperty(
         name="Prompt",
         description="Your instruction to Primr",
@@ -62,7 +86,6 @@ def register():
         default="",
         subtype="PASSWORD"
     )
-
     bpy.types.Scene.primr_model = bpy.props.StringProperty(
         name="Model",
         default="meta/llama-3.1-405b-instruct"
@@ -86,20 +109,27 @@ def register():
         name="Show Settings",
         default=False
     )
-    bpy.utils.register_class(panel.PRIMR_PT_main)
-    bpy.utils.register_class(operators.PRIMR_OT_submit)
-    bpy.utils.register_class(operators.PRIMR_OT_toggle_code)
-    bpy.utils.register_class(operators.PRIMR_OT_mention_object)
-    bpy.utils.register_class(operators.PRIMR_OT_clear_image)
-    bpy.utils.register_class(operators.PRIMR_OT_clear)
+
+    for cls in _classes:
+        bpy.utils.register_class(cls)
+
     bpy.app.timers.register(refresh_panel, first_interval=0.5)
     bpy.app.timers.register(primr_execution_timer, first_interval=0.1)
 
 
 def unregister():
+    if bpy.app.timers.is_registered(primr_execution_timer):
+        bpy.app.timers.unregister(primr_execution_timer)
+    if bpy.app.timers.is_registered(refresh_panel):
+        bpy.app.timers.unregister(refresh_panel)
+
+    for cls in reversed(_classes):
+        bpy.utils.unregister_class(cls)
+
+    agent.reset_history()
+
     del bpy.types.Scene.primr_prompt
     del bpy.types.Scene.primr_result
-    agent.reset_history()
     del bpy.types.Scene.primr_history
     del bpy.types.Scene.primr_api_key
     del bpy.types.Scene.primr_model
@@ -107,16 +137,7 @@ def unregister():
     del bpy.types.Scene.primr_mention
     del bpy.types.Scene.primr_object_picker
     del bpy.types.Scene.primr_show_settings
-    if bpy.app.timers.is_registered(refresh_panel):
-        bpy.app.timers.unregister(refresh_panel)
-    if bpy.app.timers.is_registered(primr_execution_timer):
-        bpy.app.timers.unregister(primr_execution_timer)
-    bpy.utils.register_class(operators.PRIMR_OT_clear)
-    bpy.utils.register_class(operators.PRIMR_OT_clear_image)
-    bpy.utils.register_class(operators.PRIMR_OT_mention_object)
-    bpy.utils.register_class(operators.PRIMR_OT_toggle_code)
-    bpy.utils.register_class(operators.PRIMR_OT_submit)
-    bpy.utils.register_class(panel.PRIMR_PT_main)
-    bpy.app.timers.register(refresh_panel, first_interval=0.5)
+
+
 if __name__ == "__main__":
     register()

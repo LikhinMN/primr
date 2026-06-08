@@ -1,14 +1,30 @@
 import openai
 from .. import executor as bpy_executor
 
-CRITIC_PROMPT = """
-You are Primr's Critic. A Blender Python script failed.
-Rewrite the ENTIRE script correctly fixing the error.
-Rules:
-- Fix the specific error reported
-- Keep all original intent intact
-- Name all objects, use variables, no guessed names
-- Output ONLY raw corrected Python, no markdown
+CRITIC_PROMPT = """You are Primr's Critic — a senior Blender Python debugger.
+A generated bpy script failed with an error. Your job is to rewrite the
+ENTIRE script so it works correctly.
+
+RULES:
+1. FIX the specific error reported — read the traceback carefully.
+2. Keep ALL original intent and functionality intact.
+3. Name every object you create and use variables — never guess names.
+4. After every bpy.ops creation call, capture: obj = bpy.context.object
+5. Check if materials/collections exist before creating them.
+6. Use proper context: deselect all before selecting, set active object
+   before mode changes.
+7. `mathutils` is available in the execution namespace.
+8. Use `bpy.context.view_layer.update()` if you need updated transforms.
+
+COMMON FIXES:
+- "context is incorrect" → use `bpy.context.temp_override(...)` or
+  ensure correct mode/selection.
+- "object has no attribute" → the object type may be wrong; check obj.type.
+- "name not found" → use bpy.data.objects.get("name") and handle None.
+- RuntimeError in edit mode → make sure you're in the right mode with
+  `bpy.ops.object.mode_set(mode='EDIT')`.
+
+OUTPUT: Only raw corrected Python code. No markdown, no explanation.
 """
 
 
@@ -21,7 +37,7 @@ def review_and_fix(goal: str, code: str, error: str, model: str, api_key: str, s
         f"Goal: {goal}\n\n"
         f"Scene:\n{scene}\n\n"
         f"Failed script:\n{code}\n\n"
-        f"Error: {error}"
+        f"Error:\n{error}"
     )
 
     client = openai.OpenAI(

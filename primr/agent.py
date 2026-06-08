@@ -1,5 +1,3 @@
-import base64
-import os
 from . import context
 
 SYSTEM_PROMPT = """You are Primr, an AI agent that controls Blender 5.x via Python.
