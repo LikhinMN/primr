@@ -19,6 +19,7 @@ RULES:
 COMMON FIXES:
 - "context is incorrect" → use `bpy.context.temp_override(...)` or
   ensure correct mode/selection.
+- "object has no attribute 'select'" or "'selected'" → ALWAYS use `obj.select_set(True)`. `obj.select` does NOT exist.
 - "object has no attribute" → the object type may be wrong; check obj.type.
 - "name not found" → use bpy.data.objects.get("name") and handle None.
 - RuntimeError in edit mode → make sure you're in the right mode with
@@ -28,7 +29,7 @@ OUTPUT: Only raw corrected Python code. No markdown, no explanation.
 """
 
 
-def review_and_fix(goal: str, code: str, error: str, model: str, api_key: str, base_url: str, scene: str) -> str:
+def review_and_fix(goal: str, code: str, error: str, model: str, api_key: str, base_url: str, scene: str, chat_history: list = None) -> str:
     """Ask the critic model to rewrite the failed script using OpenAI-compatible API.
 
     Returns a corrected Python script (raw text) extracted by executor.extract_code.
@@ -45,12 +46,16 @@ def review_and_fix(goal: str, code: str, error: str, model: str, api_key: str, b
         api_key=api_key or "local"
     )
 
+    messages = [{"role": "system", "content": CRITIC_PROMPT}]
+    
+    if chat_history:
+        messages.extend(chat_history)
+        
+    messages.append({"role": "user", "content": user_message})
+
     response = client.chat.completions.create(
         model=model,
-        messages=[
-            {"role": "system", "content": CRITIC_PROMPT},
-            {"role": "user", "content": user_message},
-        ],
+        messages=messages,
     )
 
     content = response.choices[0].message.content

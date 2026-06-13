@@ -111,23 +111,23 @@ complete, self-contained Python script using the `bpy` module.
 ━━━━━━━━━━━━━━━━━━━  COMMON PITFALLS TO AVOID  ━━━━━━━━━━━━━
 24. NEVER use `bpy.context.selected_objects` right after creation
     — use `bpy.context.object` instead.
-25. After joining objects, the active object is the result.
-26. `mathutils` is available in the execution namespace.
-27. Use `bpy.context.view_layer.update()` after programmatic
+25. NEVER use `obj.select = True` or `obj.selected = True`. These do NOT exist in modern Blender.
+    ALWAYS use `obj.select_set(True)`.
+26. After joining objects, the active object is the result.
+27. `mathutils` is available in the execution namespace.
+28. Use `bpy.context.view_layer.update()` after programmatic
     changes to transforms if you need to read back updated values.
 
 Think step by step internally, then output only the final coordinated script.
 """
 
 
-def generate(goal: str, model: str, api_key: str, base_url: str, extra_context: str = "") -> str:
+def generate(goal: str, model: str, api_key: str, base_url: str, extra_context: str = "", chat_history: list = None, scene_str: str = "") -> str:
     """Generate a single coordinated bpy script for the given goal using OpenAI-compatible API.
 
     Returns the extracted Python code as a string.
     """
-    scene = scene_context.get_scene_context()
-
-    user_message = f"Current scene:\n{scene}\n\n{extra_context}\n\nGoal: {goal}"
+    user_message = f"Current scene:\n{scene_str}\n\n{extra_context}\n\nGoal: {goal}"
 
     # Default to an empty string if api_key is None (e.g., for local endpoints)
     client = openai.OpenAI(
@@ -135,12 +135,16 @@ def generate(goal: str, model: str, api_key: str, base_url: str, extra_context: 
         api_key=api_key or "local"
     )
 
+    messages = [{"role": "system", "content": MASTER_PROMPT}]
+    
+    if chat_history:
+        messages.extend(chat_history)
+        
+    messages.append({"role": "user", "content": user_message})
+
     response = client.chat.completions.create(
         model=model,
-        messages=[
-            {"role": "system", "content": MASTER_PROMPT},
-            {"role": "user", "content": user_message},
-        ],
+        messages=messages,
     )
 
     content = response.choices[0].message.content
