@@ -32,9 +32,13 @@ def execute_code(code: str) -> str:
     try:
         bpy.ops.ed.undo_push(message="Primr: " + code[:40])
 
+        from . import skills
+
         namespace = {
+            "__name__": "__main__",
             "bpy": bpy,
             "mathutils": mathutils,
+            "skills": skills,
         }
 
         # Capture any print() output from the executed code
