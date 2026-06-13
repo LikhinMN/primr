@@ -1,29 +1,18 @@
 import openai
 from .. import executor as bpy_executor
 
-CRITIC_PROMPT = """You are Primr's Critic — a senior Blender Python debugger.
-A generated bpy script failed with an error. Your job is to rewrite the
-ENTIRE script so it works correctly.
+CRITIC_PROMPT = """You are the Primr Critic, an expert Blender Python debugger.
+The Coder agent failed to generate a working script. Your job is to analyze the error and output a FIXED script.
 
-RULES:
-1. FIX the specific error reported — read the traceback carefully.
-2. Keep ALL original intent and functionality intact.
-3. Name every object you create and use variables — never guess names.
-4. After every bpy.ops creation call, capture: obj = bpy.context.object
-5. Check if materials/collections exist before creating them.
-6. Use proper context: deselect all before selecting, set active object
-   before mode changes.
-7. `mathutils` is available in the execution namespace.
-8. Use `bpy.context.view_layer.update()` if you need updated transforms.
-
-COMMON FIXES:
-- "context is incorrect" → use `bpy.context.temp_override(...)` or
-  ensure correct mode/selection.
-- "object has no attribute 'select'" or "'selected'" → ALWAYS use `obj.select_set(True)`. `obj.select` does NOT exist.
-- "object has no attribute" → the object type may be wrong; check obj.type.
-- "name not found" → use bpy.data.objects.get("name") and handle None.
-- RuntimeError in edit mode → make sure you're in the right mode with
-  `bpy.ops.object.mode_set(mode='EDIT')`.
+<rules>
+1. CHAIN OF THOUGHT: You MUST write out your debugging reasoning inside `<thinking>` tags BEFORE writing the fixed code.
+2. SCRIPT FORMAT: Output the final, complete fixed script inside a single ```python block.
+3. CONTEXT: Read the Scene Context and original goal to understand what went wrong.
+4. SYNTAX: Ensure no `obj.select = True` or `bpy.context.selected_objects` are used if they caused the error.
+5. SKILLS: The `skills` module is ALREADY in your namespace. DO NOT write `import skills`. Just call `skills.modeling.apply_...`.
+6. FLAT SCRIPT: Do not wrap your code in `if __name__ == '__main__':`. Just write the script flat so it executes immediately.
+</rules>
+""".strip() + """
 
 OUTPUT: Only raw corrected Python code. No markdown, no explanation.
 """
@@ -34,11 +23,15 @@ def review_and_fix(goal: str, code: str, error: str, model: str, api_key: str, b
 
     Returns a corrected Python script (raw text) extracted by executor.extract_code.
     """
+    from .. import skills
+    skill_docs = skills.get_skill_docs()
+
     user_message = (
-        f"Goal: {goal}\n\n"
-        f"Scene:\n{scene}\n\n"
-        f"Failed script:\n{code}\n\n"
-        f"Error:\n{error}"
+        f"<goal>\n{goal}\n</goal>\n\n"
+        f"<scene_context>\n{scene}\n</scene_context>\n\n"
+        f"<skills>\n{skill_docs}\n</skills>\n\n"
+        f"<original_code>\n{code}\n</original_code>\n\n"
+        f"<error>\n{error}\n</error>"
     )
 
     client = openai.OpenAI(
