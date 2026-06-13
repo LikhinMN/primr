@@ -6,6 +6,7 @@ from contextlib import redirect_stdout
 
 import bpy
 import mathutils
+from .logger import logger
 
 code_queue = queue.Queue()
 
@@ -27,6 +28,7 @@ def execute_code(code: str) -> str:
 
     Returns 'Success' on success, or a detailed error string on failure.
     """
+    logger.debug(f"Executing generated code:\n{code}")
     try:
         bpy.ops.ed.undo_push(message="Primr: " + code[:40])
 
@@ -46,4 +48,5 @@ def execute_code(code: str) -> str:
         return "Success"
     except Exception as e:
         tb = traceback.format_exc()
+        logger.error(f"Execution failed:\n{tb}")
         return f"Error executing code: {e}\n\nTraceback:\n{tb}"
