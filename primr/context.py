@@ -76,6 +76,7 @@ def _get_object_summary(obj, detailed=False):
         "location": [round(obj.location.x, 3), round(obj.location.y, 3), round(obj.location.z, 3)],
         "rotation": [round(obj.rotation_euler.x, 3), round(obj.rotation_euler.y, 3), round(obj.rotation_euler.z, 3)],
         "scale": [round(obj.scale.x, 3), round(obj.scale.y, 3), round(obj.scale.z, 3)],
+        "dimensions": [round(obj.dimensions.x, 3), round(obj.dimensions.y, 3), round(obj.dimensions.z, 3)],
         "visible": obj.visible_get(),
     }
 
