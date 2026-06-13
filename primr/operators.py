@@ -18,8 +18,8 @@ class PRIMR_OT_submit(bpy.types.Operator):
         screen = context.screen
 
         prefs = context.preferences.addons[__package__].preferences
-        model = prefs.primr_model
-        api_key = prefs.primr_api_key
+        model = prefs.primr_model.strip()
+        api_key = prefs.primr_api_key.strip()
         base_url = prefs.primr_base_url.strip().rstrip("/")
         if base_url.endswith("/chat/completions"):
             base_url = base_url[:-17]  # Strip /chat/completions if user accidentally included it
@@ -86,6 +86,10 @@ class PRIMR_OT_submit(bpy.types.Operator):
                     logger.error(f"API Error during generate: {error_msg}")
                     if "404" in error_msg or "NotFoundError" in error_msg:
                         state.add_message("assistant", f"⚠️ The model '{model}' does not exist at the given API endpoint. Please check your model name and Base URL.", status="error")
+                        state.set_thinking(False)
+                        return
+                    elif "401" in error_msg or "403" in error_msg or "Authorization" in error_msg or "Forbidden" in error_msg:
+                        state.add_message("assistant", "⚠️ Authentication failed. Please check that your API key is correct and active in the Add-on Preferences.", status="error")
                         state.set_thinking(False)
                         return
                     else:
