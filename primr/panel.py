@@ -71,16 +71,17 @@ class PRIMR_PT_main(bpy.types.Panel):
         # --- Top Bar (Settings Toggle & Clear) ---
         row = layout.row(align=True)
         # Instead of inline settings, just provide a button that opens preferences
-        op = row.operator("screen.userpref_show", text="Settings", icon="PREFERENCES")
-        op.filter_text = "Primr"
+        row.operator("screen.userpref_show", text="Settings", icon="PREFERENCES")
         row.operator("primr.clear", text="", icon="TRASH", emboss=False)
 
         # --- Chat Area ---
         messages = state.get_messages()
         if not messages:
             box = layout.box()
-            box.label(text="No conversation yet.", icon='INFO')
-            box.label(text="Type an instruction below to begin.")
+            box.label(text="Welcome to Primr!", icon='INFO')
+            box.label(text="1. Set your API key in Settings (above).")
+            box.label(text="2. Type an instruction below to generate code.")
+            box.label(text="3. Primr remembers your conversation history.")
         else:
             for i, msg in enumerate(messages):
                 draw_message(layout, msg, i)
