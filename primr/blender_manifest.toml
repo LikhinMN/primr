@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 id = "primr"
 name = "Primr"
-version = "0.1.0"
+version = "0.4.0"
 tagline = "AI-powered addon — prompt your 3D scene"
 maintainer = "Likhin M N"
 type = "add-on"
