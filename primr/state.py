@@ -17,7 +17,7 @@ class Message:
 
 messages: list[Message] = []
 is_thinking: bool = False
-active_model: str = "gemma4:4b"
+active_model: str = "meta/llama-3.1-405b-instruct"
 
 
 def add_message(role, content, is_code=False, status="done", image_path="", mentions=None) -> Message:
